@@ -43,13 +43,23 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
       describe('pgEnum', () => {
         it('uses schema #3171', () => {
           expectsql(sql.pgEnum(FooUser.getTableName(), 'mood', FooUser.rawAttributes.mood.type), {
-            postgres: 'CREATE TYPE "foo"."enum_users_mood" AS ENUM(\'happy\', \'sad\');'
+            postgres: `DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_mood') THEN
+              CREATE TYPE "foo"."enum_users_mood" AS ENUM('happy', 'sad');
+          END IF;
+      END$$;`
           });
         });
 
         it('does add schema when public', () => {
           expectsql(sql.pgEnum(PublicUser.getTableName(), 'theirMood', PublicUser.rawAttributes.mood.type), {
-            postgres: 'CREATE TYPE "public"."enum_users_theirMood" AS ENUM(\'happy\', \'sad\');'
+            postgres: `DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'enum_users_theirMood') THEN
+              CREATE TYPE "public"."enum_users_theirMood" AS ENUM('happy', 'sad');
+          END IF;
+      END$$;`
           });
         });
       });
@@ -86,4 +96,3 @@ describe(Support.getTestDialectTeaser('SQL'), () => {
     }
   });
 });
-
